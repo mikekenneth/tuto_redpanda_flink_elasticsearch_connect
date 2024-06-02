@@ -1,0 +1,31 @@
+SET
+  'pipeline.name' = 'user-activity-processing';
+
+-- Create raw event tables from topic "user_activity"
+CREATE TABLE useractivity (
+  id VARCHAR,
+  activity_type VARCHAR,
+  ts TIMESTAMP(3)
+) WITH (
+  'connector' = 'kafka',
+  'topic' = 'user_activity',
+  'properties.bootstrap.servers' = 'redpanda-0:9092',
+  'properties.group.id' = 'test-group',
+  'properties.auto.offset.reset' = 'earliest',
+  'format' = 'json'
+);
+
+-- Create destination event table to topic "user_activity_enriched"
+CREATE TABLE useractivity_enriched WITH (
+  'connector' = 'kafka',
+  'topic' = 'user_activity_enriched',
+  'properties.bootstrap.servers' = 'redpanda-0:9092',
+  'format' = 'json'
+) AS
+SELECT
+  id,
+  UPPER(activity_type) AS activity_type_upper,
+  ts,
+  'contant_mike' AS contant_mike
+FROM
+  useractivity;
